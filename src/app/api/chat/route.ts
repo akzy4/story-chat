@@ -22,29 +22,40 @@ export async function POST(req: Request) {
 
   const client = new Anthropic({ apiKey });
 
-  const stream = client.messages.stream({
-    model: 'claude-sonnet-4-5',
-    max_tokens: 1024,
-    system: systemPrompt,
-    messages: truncatedMessages,
-  });
-
+  // ReadableStream の start 内でストリームを開始することで競合状態を回避
   const readable = new ReadableStream({
-    start(controller) {
+    async start(controller) {
       const encoder = new TextEncoder();
-      stream.on('text', (text) => {
-        controller.enqueue(encoder.encode(text));
-      });
-      stream.on('finalMessage', () => {
-        controller.close();
-      });
-      stream.on('error', (error) => {
+      try {
+        const stream = client.messages.stream({
+          model: 'claude-sonnet-4-5',
+          max_tokens: 1024,
+          system: systemPrompt,
+          messages: truncatedMessages,
+        });
+
+        for await (const event of stream) {
+          if (
+            event.type === 'content_block_delta' &&
+            event.delta.type === 'text_delta'
+          ) {
+            controller.enqueue(encoder.encode(event.delta.text));
+          }
+        }
+      } catch (error) {
         controller.error(error);
-      });
+      } finally {
+        controller.close();
+      }
     },
   });
 
   return new Response(readable, {
-    headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+    headers: {
+      'Content-Type': 'text/plain; charset=utf-8',
+      // Vercel / nginx のバッファリングを無効化してリアルタイム配信を保証
+      'X-Accel-Buffering': 'no',
+      'Cache-Control': 'no-cache, no-transform',
+    },
   });
 }
