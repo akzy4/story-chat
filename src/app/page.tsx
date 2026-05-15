@@ -1,6 +1,6 @@
 "use client";
 
-import { useReducer, useState, useRef } from "react";
+import { useReducer, useState, useRef, useEffect, useCallback } from "react";
 import GenreSelector from "@/components/GenreSelector";
 import ChatWindow from "@/components/ChatWindow";
 import ThemeToggle from "@/components/ThemeToggle";
@@ -59,6 +59,48 @@ export default function Home() {
     setGenre(selectedGenre);
     setPhase("chat");
   }
+
+  // フェーズが chat になったら Claude に物語の冒頭を自動生成させる
+  const startStory = useCallback(async (sysPrompt: string) => {
+    setIsStreaming(true);
+    dispatch({ type: "ADD_ASSISTANT_STREAMING" });
+    try {
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          messages: [{ role: "user", content: "物語を始めてください。" }],
+          systemPrompt: sysPrompt,
+        }),
+      });
+      if (!res.ok || !res.body) {
+        dispatch({ type: "APPEND_CHUNK", chunk: "エラーが発生しました。もう一度お試しください。" });
+        dispatch({ type: "FINISH_STREAMING" });
+        setIsStreaming(false);
+        return;
+      }
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        dispatch({ type: "APPEND_CHUNK", chunk: decoder.decode(value, { stream: true }) });
+      }
+    } catch {
+      dispatch({ type: "APPEND_CHUNK", chunk: "通信エラーが発生しました。" });
+    } finally {
+      dispatch({ type: "FINISH_STREAMING" });
+      setIsStreaming(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (phase === "chat" && systemPromptRef.current) {
+      startStory(systemPromptRef.current);
+    }
+    // phase が chat に変わったときだけ実行
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase]);
 
   async function sendMessage(content: string) {
     if (!content.trim() || isStreaming) return;
