@@ -1,7 +1,8 @@
 import Anthropic from '@anthropic-ai/sdk';
 import type { MessageParam } from '@anthropic-ai/sdk/resources/messages';
 
-export const runtime = 'edge';
+// Anthropic SDK が node:fs / node:path を使うため Node.js ランタイムを使用
+export const runtime = 'nodejs';
 
 // 20ターン分（user + assistant で 40メッセージ）を上限とする
 const MAX_MESSAGES = 40;
