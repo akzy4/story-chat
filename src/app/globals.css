@@ -1,0 +1,43 @@
+@import "tailwindcss";
+
+/* Tailwind v4: class ベースのダークモードを有効化 */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ライトモード */
+:root {
+  --background: #f8f7f4;
+  --foreground: #1a1a1a;
+  --card-bg: #ffffff;
+  --border: rgba(0, 0, 0, 0.08);
+  --muted: rgba(0, 0, 0, 0.45);
+}
+
+/* ダークモード — 深い紺〜黒系で物語への沈浸感を演出 */
+.dark {
+  --background: #0d1117;
+  --foreground: #e6edf3;
+  --card-bg: #161b22;
+  --border: rgba(255, 255, 255, 0.08);
+  --muted: rgba(255, 255, 255, 0.45);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+}
+
+/* スクロールバーをダークモードでも馴染ませる */
+@media (prefers-color-scheme: dark) {
+  :root:not(.light) {
+    color-scheme: dark;
+  }
+}
+.dark {
+  color-scheme: dark;
+}
