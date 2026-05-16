@@ -42,3 +42,7 @@ next-env.d.ts
 
 # claude code local settings
 .claude/
+
+# playwright mcp snapshots & screenshots
+.playwright-mcp/
+screenshot-*.png

@@ -102,14 +102,63 @@
 
 ## Phase 8: Vercel デプロイ
 
-- [ ] GitHub リポジトリを作成して push
-- [ ] Vercel にプロジェクトをインポート
-- [ ] Vercel ダッシュボードで環境変数 `ANTHROPIC_API_KEY` を設定
-- [ ] デプロイ完了後、本番 URL で動作確認
+- [x] GitHub リポジトリを作成して push → https://github.com/akzy4/story-chat
+- [x] Vercel にプロジェクトをインポート
+- [x] Vercel ダッシュボードで環境変数 `ANTHROPIC_API_KEY` を設定
+- [x] デプロイ完了後、本番 URL で動作確認 → Ready ✅
 
 ---
 
-## 残課題・将来対応（今回のスコープ外）
+## 残課題・バグ修正
+
+### 🔴 重大バグ
+
+- [ ] **会話履歴の順序バグ** — `startStory` はアシスタントメッセージだけを state に追加するため、
+  ユーザーが最初のメッセージを送ると history が `[assistant, user]` の順になり Anthropic API が 400 エラーを返す
+  - 修正方針: `startStory` 内で `ADD_USER` も dispatch してトリガーメッセージ（"物語を始めてください。"）を
+    state に含める。`MessageBubble` に `hidden` フラグを追加して UI 上は非表示にする
+- [ ] **リセット中のストリーミング競合** — ストリーミング中に「ジャンル選択に戻る」を押すと
+  `dispatch` がリセット後の state に作用し続けてメッセージが混入するリスクがある
+  - 修正方針: `sendMessage` / `startStory` で `AbortController` を使い、
+    `handleReset` 時に `abort()` を呼んでフェッチをキャンセルする
+
+### 🟠 セキュリティ・堅牢性
+
+- [ ] **route.ts のリクエストバリデーション不足** — `messages` が配列かどうか、
+  `systemPrompt` が文字列かどうかの検証がなく、不正な入力でクラッシュしうる
+  - 修正方針: `zod` または手動チェックで `messages`・`systemPrompt` を検証し、400 を返す
+- [ ] **Vercel Function のタイムアウト未設定** — デフォルトは 10 秒。長い物語生成が途中で
+  切れるリスクがある
+  - 修正方針: `route.ts` に `export const maxDuration = 60;` を追加（Vercel Pro は最大 300 秒）
+- [ ] **AbortController 未実装** — ネットワークエラーや遅延時にフェッチをキャンセルできない
+  - 修正方針: `useRef<AbortController>` を持ち、送信時に新しい controller を生成、
+    アンマウント時と `handleReset` 時に `abort()` を呼ぶ
+
+### 🟡 コード品質
+
+- [ ] **ストリーミングロジックの重複** — `startStory` と `sendMessage` がほぼ同じ
+  fetch + ReadableStream 読み取りコードを持っている
+  - 修正方針: `src/lib/stream.ts` に `streamChat(messages, systemPrompt, dispatch, setIsStreaming)`
+    ヘルパーを切り出して両関数から呼ぶ
+
+### 🟢 UX・アクセシビリティ・パフォーマンス
+
+- [ ] **エラーバウンダリ未実装** — 予期しない React エラーが画面を真っ白にしても
+  ユーザーにメッセージが表示されない
+  - 修正方針: `src/components/ErrorBoundary.tsx` を作成し `layout.tsx` で wrap する
+- [ ] **スクロールのパフォーマンス** — チャンクごとに `scrollIntoView` が呼ばれ、
+  高頻度更新で画面がガタつく可能性がある
+  - 修正方針: `ChatWindow` の `useEffect` を `useRef` + `requestAnimationFrame` でスロットリングするか、
+    スクロールをユーザーが一番下にいるときだけ実行する（Intersection Observer）
+- [ ] **ChatWindow のメモ化不足** — チャンクごとに `ChatWindow` 全体が再描画される
+  - 修正方針: `MessageBubble` を `React.memo` でラップし、完了済みメッセージの再描画を抑制
+- [ ] **スクリーンリーダー対応なし** — ストリーミング中のテキスト更新がスクリーンリーダーに通知されない
+  - 修正方針: `ChatWindow` の末尾に `aria-live="polite"` な隠し要素を設け、
+    最新のアシスタントメッセージをそこに反映する
+
+---
+
+## 将来機能（スコープ外）
 
 - [ ] レート制限・abuse 対策（同一 IP からの過剰リクエスト制限）
 - [ ] ストーリーのエクスポート機能（テキストコピー／PDF 出力）
