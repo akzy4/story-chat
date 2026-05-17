@@ -227,7 +227,7 @@ export default function Home() {
             className="shrink-0 h-10 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white text-sm font-medium
               transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
           >
-            送信
+            送信!!!
           </button>
         </form>
       </div>
