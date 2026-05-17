@@ -214,7 +214,7 @@ export default function Home() {
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
             disabled={isStreaming}
-            placeholder={isStreaming ? "物語を生成中..." : "行動や言葉を入力…（Enter で送信）"}
+            placeholder={isStreaming ? "物語を生成中...！！！" : "行動や言葉を入力…（Enter で送信）"}
             rows={2}
             className="flex-1 resize-none rounded-xl border border-black/10 dark:border-white/10
               bg-black/5 dark:bg-white/5 px-3 py-2 text-sm
