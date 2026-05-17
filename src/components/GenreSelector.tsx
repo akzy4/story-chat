@@ -23,7 +23,7 @@ export default function GenreSelector({ onStart }: Props) {
   return (
     <div className="flex flex-col items-center gap-6 w-full max-w-lg mx-auto px-4 py-10">
       <div className="text-center">
-        <h1 className="text-3xl font-bold tracking-tight mb-2">Story Chat</h1>
+        <h1 className="text-3xl font-bold tracking-tight mb-2">Story Chat — AIと紡ぐ物語！！</h1>
         <p className="text-sm" style={{ color: "var(--muted)" }}>
           ジャンルを選んで、AIと物語を紡ごう
         </p>

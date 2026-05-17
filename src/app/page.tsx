@@ -195,7 +195,7 @@ export default function Home() {
           ← ジャンル選択に戻る
         </button>
         <span className="text-sm font-medium">
-          {genre ? GENRE_LABELS[genre] : "Story Chat"}
+          {genre ? GENRE_LABELS[genre] : "Story Chat — AIと紡ぐ物語！！"}
         </span>
         <ThemeToggle />
       </header>

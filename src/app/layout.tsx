@@ -9,7 +9,7 @@ const geistSans = Geist({
 });
 
 export const metadata: Metadata = {
-  title: "Story Chat — AIと紡ぐ物語",
+  title: "Story Chat — AIと紡ぐ物語！！",
   description: "Claude AIと共同でインタラクティブなストーリーを創作するチャットボット",
 };
 
